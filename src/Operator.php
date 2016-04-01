@@ -58,16 +58,14 @@ class Operator extends Token
     /**
      * Return true if this operator has lower priority of operator $o.
      * 
-     * @param \Math\Operator $o
+     * @param \oat\beeme\Operator $o
      * @return boolean
      */
     public function hasLowerPriority(Operator $o)
     {
-        $hasLowerPriority = ((Operator::O_LEFT_ASSOCIATIVE == $o->getAssociativity()
-                            && $this->getPriority() == $o->getPriority())
-                            || $this->getPriority() < $o->getPriority());
-
-
-        return $hasLowerPriority;
+        $hasLowerPriority1 = Operator::O_LEFT_ASSOCIATIVE == $this->getAssociativity() && $this->getPriority() <= $o->getPriority();
+        $hasLowerPriority2 = Operator::O_RIGHT_ASSOCIATIVE == $this->getAssociativity() && $this->getPriority() < $o->getPriority();
+        
+        return $hasLowerPriority1 || $hasLowerPriority2;
     }
 }

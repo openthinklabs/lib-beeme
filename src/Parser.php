@@ -60,8 +60,9 @@ class Parser
     /**
      * Evaluate string representing mathematical expression.
      * 
-     * @param string $expression
+     * @param string $expression An expression to be evaluated.
      * @return float
+     * @throws \InvalidArgumentException in case of invalid $expression.
      */
     public function evaluate($expression)
     {
@@ -96,20 +97,35 @@ class Parser
                 case '+':
                     $stack->push($stack->pop() + $stack->pop());
                     break;
+                case '+u':
+                    $stack->push($stack->pop() * 1.);
+                    break;
                 case '-':
                     $n = $stack->pop();
                     $stack->push($stack->pop() - $n);
+                    break;
+                case '-u':
+                    $stack->push($stack->pop() * -1.);
                     break;
                 case '*':
                     $stack->push($stack->pop() * $stack->pop());
                     break;
                 case '/':
                     $n = $stack->pop();
+                    
+                    if ($n == 0) {
+                        throw new \RangeException('Division by zero.');
+                    }
+                    
                     $stack->push($stack->pop() / $n);
                     break;
                 case '%':
                     $n = $stack->pop();
                     $stack->push($stack->pop() % $n);
+                    break;
+                case '^':
+                    $n = $stack->pop();
+                    $stack->push(pow($stack->pop(), $n));
                     break;
                 default:
                     throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));

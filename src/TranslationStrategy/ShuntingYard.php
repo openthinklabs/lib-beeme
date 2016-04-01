@@ -4,6 +4,7 @@ namespace oat\beeme\TranslationStrategy;
 
 use InvalidArgumentException;
 use oat\beeme\Token;
+use oat\beeme\Operator;
 use SplQueue;
 use SplStack;
 
@@ -43,20 +44,26 @@ class ShuntingYard implements TranslationStrategyInterface
     {
         $this->operatorStack = new SplStack();
         $this->outputQueue = new SplQueue();
-        foreach($tokens as $token) {
+        for ($i = 0; $i < count($tokens); $i++) {
+            $token = $tokens[$i];
+            
             switch ($token->getType()) {
                 case Token::T_OPERAND:
                     $this->outputQueue->enqueue($token);
                     break;
                 case Token::T_OPERATOR:
                     $o1 = $token;
-                    while($this->hasOperatorInStack()
-                            && ($o2 = $this->operatorStack->top())
-                            && $o1->hasLowerPriority($o2))
-                    {
-                        $this->outputQueue->enqueue($this->operatorStack->pop());
+                    $isUnary = ($o1->getValue() === '-' || $o1->getValue() === '+') && 
+                               ($this->isPreviousTokenOperator($tokens, $i) || $this->isPreviousTokenLeftParenthesis($tokens, $i) || $this->hasPreviousToken($i) === false);
+                    
+                    if ($isUnary) {
+                        $o1 = new Operator($o1->getValue() . 'u', 3, Operator::O_NONE_ASSOCIATIVE);
+                    } else {
+                        while($this->hasOperatorInStack() && ($o2 = $this->operatorStack->top()) && $o1->hasLowerPriority($o2)) {
+                            $this->outputQueue->enqueue($this->operatorStack->pop());
+                        }
                     }
-
+                    
                     $this->operatorStack->push($o1);
                     break;
                 case Token::T_LEFT_BRACKET:
@@ -88,7 +95,7 @@ class ShuntingYard implements TranslationStrategyInterface
     }
 
     /**
-     * Determine if there is operator token in operato stack
+     * Determine if there is operator token in operator stack
      * 
      * @return boolean
      */
@@ -103,5 +110,28 @@ class ShuntingYard implements TranslationStrategyInterface
         }
 
         return $hasOperatorInStack;
+    }
+    
+    private function isPreviousTokenOperator(array $tokens, $index)
+    {
+        if ($this->hasPreviousToken($index) === true) {
+            return $tokens[$index - 1] instanceOf Operator;
+        } else {
+            return false;
+        }
+    }
+    
+    private function isPreviousTokenLeftParenthesis(array $tokens, $index)
+    {
+        if ($this->hasPreviousToken($index) === true) {
+            return $tokens[$index - 1]->getValue() === '(';
+        } else {
+            return false;
+        }
+    }
+    
+    private function hasPreviousToken($index)
+    {
+        return $index > 0;
     }
 }
