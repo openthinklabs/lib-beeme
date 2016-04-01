@@ -1,14 +1,15 @@
-# Math
+# Beeme (Basic Equation/Expression Math Engine)
 
-Simple mathematical expression parser and calculator.
+Simple mathematical expression parser and calculator *based on the great work of
+Adrean Boyadzhiev*.
 
 ## Install
-The recommended way to install Math is [through composer](http://getcomposer.org).
+The recommended way to install Beeme is [through composer](http://getcomposer.org).
 
 ```JSON
 {
     "require": {
-        "aboyadzhiev/php-math-parser": "dev-master"
+        "oat-sa/lib-beeme": "dev-develop"
     }
 }
 ```
@@ -27,7 +28,6 @@ echo $result; //302
 ```
 ## TODO
   - Add unit tests.
-  - Add additional strategy for translation from infix to reverse polish notation
 
 ## License
 
