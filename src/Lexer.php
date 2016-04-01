@@ -6,6 +6,7 @@ namespace oat\beeme;
  * Tokenize mathematical expression.
  *
  * @author Adrean Boyadzhiev (netforce) <adrean.boyadzhiev@gmail.com>
+ * @author Jérôme Bogaerts <jerome@taotesting.com>
  */
 class Lexer
 {
@@ -35,6 +36,7 @@ class Lexer
         '*' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
         '/' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
         '%' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '^' => array('priority' => 2, 'associativity' => Operator::O_RIGHT_ASSOCIATIVE)
     );
 
     public function __construct()
@@ -43,7 +45,7 @@ class Lexer
     }
     
     /**
-     * Tokenize matematical expression.
+     * Tokenize mathematical expression.
      * 
      * @param type $code
      * @return array Collection of Token instances
@@ -51,43 +53,76 @@ class Lexer
      */
     public function tokenize($code)
     {
-        $code = trim((string) $code);
-        if (empty($code)) {
+        if (is_string($code) === false) {
+            throw new \InvalidArgumentException('Cannot tokenize a non-string value.');
+        }
+        
+        // Remove all white spaces from $code.
+        $code = preg_replace('/\s+/', '', $code);
+        
+        if ($code === '') {
             throw new \InvalidArgumentException('Cannot tokenize empty string.');
         }
-
+        
         $this->code = $code;
         $this->tokens = array();
-
-        $tokenArray = explode(' ', $this->code);
-
-        if (!is_array($tokenArray) || empty($tokenArray)) {
-            throw new \InvalidArgumentException(
-                sprintf('Cannot tokenize string: %s, please use " "(empty space for delimeter betwwen tokens)', $this->code)
-            );
-        }
-
-        foreach ($tokenArray as $t) {
-            if (array_key_exists($t, static::$operatorsMap)) {
+        
+        $availableOperators = array_keys(static::$operatorsMap);
+        $constantBuffer = '';
+        
+        for ($i = 0; $i < strlen($code); $i++) {
+            $char = $code[$i];
+            
+            if (in_array($char, $availableOperators) === true) {
+                
+                // If the constant buffer is not empty, there is a token to be built.
+                if ($constantBuffer !== '') {
+                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
+                    $this->tokens[] = $token;
+                    $constantBuffer = '';
+                }
+                
+                // Deal with operator.
                 $token = new Operator(
-                        $t,
-                        static::$operatorsMap[$t]['priority'],
-                        static::$operatorsMap[$t]['associativity']
+                    $char,
+                    static::$operatorsMap[$char]['priority'],
+                    static::$operatorsMap[$char]['associativity']
                 );
-            } elseif (is_numeric($t)) {
-                $token = new Token((float) $t, Token::T_OPERAND);
-            }elseif('(' === $t) {
-                $token = new Token($t, Token::T_LEFT_BRACKET);
-            }elseif(')' === $t) {
-                $token = new Token($t, Token::T_RIGHT_BRACKET);
-            }else {
-                throw new \InvalidArgumentException(sprintf('Syntax error: unknown token "%s"', $t));
+                $this->tokens[] = $token;
+            } elseif (is_numeric($char) === true || $char === '.') {
+                // Deal with constant content.
+                $constantBuffer .= $char;
+            } elseif ($char === '(') {
+                // If the constant buffer is not empty, there is a token to be built.
+                if ($constantBuffer !== '') {
+                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
+                    $this->tokens[] = $token;
+                    $constantBuffer = '';
+                }
+                
+                $token = new Token($char, Token::T_LEFT_BRACKET);
+                $this->tokens[] = $token;
+            } elseif ($char === ')') {
+                // If the constant buffer is not empty, there is a token to be built.
+                if ($constantBuffer !== '') {
+                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
+                    $this->tokens[] = $token;
+                    $constantBuffer = '';
+                }
+                
+                $token = new Token($char, Token::T_RIGHT_BRACKET);
+                $this->tokens[] = $token;
+            } else {
+                throw new \InvalidArgumentException(sprintf("Syntax error: invalid character '%s'.", $char));
             }
-
-            $this->tokens[] = $token;
         }
-
+        
+        if ($constantBuffer !== '') {
+            $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
+            $this->tokens[] = $token;
+            $constantBuffer = '';
+        }
+        
         return $this->tokens;
     }
-
 }
