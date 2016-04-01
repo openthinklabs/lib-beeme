@@ -33,11 +33,12 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array('2 ^ 3 * 2', 16.),
             array('(3 * 4) ^ 2 + 3', 147.),
             array('2 ^ 2 ^ 3', 256.),
-            array('2 ^ 2 * 3', 12.)
-            //array('-1 + 0', -1.),
-            //array('0 + -1', -1.),
-            //array('+0 + 1', 1.),
-            //array('9 + +10', 19.)
+            array('2 ^ 2 * 3', 12.),
+            array('-1 + 0', -1.),
+            array('0 + -1', -1.),
+            array('+0 + 1', 1.),
+            array('9 + +10', 19.),
+            array('+1 - -1', 2.)
         );
     }
     

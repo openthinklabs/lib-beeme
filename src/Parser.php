@@ -97,9 +97,15 @@ class Parser
                 case '+':
                     $stack->push($stack->pop() + $stack->pop());
                     break;
+                case '+u':
+                    $stack->push($stack->pop() * 1.);
+                    break;
                 case '-':
                     $n = $stack->pop();
                     $stack->push($stack->pop() - $n);
+                    break;
+                case '-u':
+                    $stack->push($stack->pop() * -1.);
                     break;
                 case '*':
                     $stack->push($stack->pop() * $stack->pop());
