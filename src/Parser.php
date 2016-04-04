@@ -1,6 +1,7 @@
 <?php
 
 namespace oat\beeme;
+use oat\beeme\Token;
 
 /**
  * Evaluate mathematical expression.
@@ -61,17 +62,18 @@ class Parser
      * Evaluate string representing mathematical expression.
      * 
      * @param string $expression An expression to be evaluated.
+     * @param array $variables
      * @return float
      * @throws \InvalidArgumentException in case of invalid $expression.
      */
-    public function evaluate($expression)
+    public function evaluate($expression, array $variables = array())
     {
         $lexer = $this->getLexer();
         $tokens = $lexer->tokenize($expression);
 
         $translationStrategy = new \oat\beeme\TranslationStrategy\ShuntingYard();
 
-        return $this->evaluateRPN($translationStrategy->translate($tokens));
+        return $this->evaluateRPN($translationStrategy->translate($tokens), $variables);
     }
 
     /**
@@ -79,61 +81,77 @@ class Parser
      * representing mathematical expression.
      * 
      * @param array $expressionTokens
+     * @param array $variables
      * @return float
      * @throws \InvalidArgumentException
      */
-    private function evaluateRPN(array $expressionTokens)
+    private function evaluateRPN(array $expressionTokens, array $variables = array())
     {
         $stack = new \SplStack();
 
         foreach ($expressionTokens as $token) {
             $tokenValue = $token->getValue();
-            if (is_numeric($tokenValue)) {
-                $stack->push((float) $tokenValue);
-                continue;
-            }
-
-            switch ($tokenValue) {
-                case '+':
-                    $stack->push($stack->pop() + $stack->pop());
-                    break;
-                case '+u':
-                    $stack->push($stack->pop() * 1.);
-                    break;
-                case '-':
-                    $n = $stack->pop();
-                    $stack->push($stack->pop() - $n);
-                    break;
-                case '-u':
-                    $stack->push($stack->pop() * -1.);
-                    break;
-                case '*':
-                    $stack->push($stack->pop() * $stack->pop());
-                    break;
-                case '/':
-                    $n = $stack->pop();
-                    
-                    if ($n == 0) {
-                        throw new \RangeException('Division by zero.');
+            
+            if ($token->getType() === Token::T_OPERAND) {
+                if (is_numeric($tokenValue) === true) {
+                    // Number.
+                    $stack->push($tokenValue);
+                } else {
+                    // Variable to substitute.
+                    if (isset($variables[$tokenValue]) === true) {
+                        if (is_numeric($variables[$tokenValue]) === true) {
+                            $stack->push(floatval($variables[$tokenValue]));
+                        } else {
+                            $nonNumericValue = $variables[$tokenValue];
+                            throw new \InvalidArgumentException("Cannot substitute variable '${tokenValue}' with non-numeric value '${nonNumericValue}'.");
+                        }
+                    } else {
+                        throw new \InvalidArgumentException("Cannot substitute variable '${tokenValue}'. No value provided.");
                     }
-                    
-                    $stack->push($stack->pop() / $n);
-                    break;
-                case '%':
-                    $n = $stack->pop();
-                    $stack->push($stack->pop() % $n);
-                    break;
-                case '^':
-                    $n = $stack->pop();
-                    $stack->push(pow($stack->pop(), $n));
-                    break;
-                case '=':
-                    $n = $stack->pop();
-                    $stack->push($stack->pop() == $n);
-                    break;
-                default:
-                    throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));
-                    break;
+                }
+            } else {
+                switch ($tokenValue) {
+                    case '+':
+                        $stack->push($stack->pop() + $stack->pop());
+                        break;
+                    case '+u':
+                        $stack->push($stack->pop() * 1.);
+                        break;
+                    case '-':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() - $n);
+                        break;
+                    case '-u':
+                        $stack->push($stack->pop() * -1.);
+                        break;
+                    case '*':
+                        $stack->push($stack->pop() * $stack->pop());
+                        break;
+                    case '/':
+                        $n = $stack->pop();
+                        
+                        if ($n == 0) {
+                            throw new \RangeException('Division by zero.');
+                        }
+                        
+                        $stack->push($stack->pop() / $n);
+                        break;
+                    case '%':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() % $n);
+                        break;
+                    case '^':
+                        $n = $stack->pop();
+                        $stack->push(pow($stack->pop(), $n));
+                        break;
+                    case '=':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() == $n);
+                        break;
+                    default:
+                        throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));
+                        break;
+                }
             }
         }
 

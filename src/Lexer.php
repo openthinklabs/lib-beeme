@@ -95,7 +95,7 @@ class Lexer
                     static::$operatorsMap[$char]['associativity']
                 );
                 $this->tokens[] = $token;
-            } elseif (is_numeric($char) === true || $char === '.') {
+            } elseif (LexingUtils::isCharPartOfNumber($char) === true || LexingUtils::isCharPartOfVariable($char)) {
                 // Deal with constant content.
                 $this->constantBuffer .= $char;
             } elseif ($char === '(') {
@@ -131,9 +131,11 @@ class Lexer
     private function cleanConstantBuffer()
     {
         if ($this->constantBuffer !== '') {
-            $token = new Token(floatval($this->constantBuffer), Token::T_OPERAND);
-             $this->tokens[] = $token;
-             $this->constantBuffer = '';
+            $val = (is_numeric($this->constantBuffer)) ? floatval($this->constantBuffer) : $this->constantBuffer;
+            
+            $token = new Token($val, Token::T_OPERAND);
+            $this->tokens[] = $token;
+            $this->constantBuffer = '';
         }
     }
 }
