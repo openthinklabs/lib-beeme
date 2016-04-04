@@ -90,6 +90,8 @@ class ParserTest extends PHPUnit_Framework_TestCase
         return array(
             array("Syntax error: unexpected character ','.", ','),
             array("Syntax error: unexpected character ','.", '24 + 3,4 - 4'),
+            array("Syntax error: mismatched parentheses or misplaced number.", '(24 + 3'),
+            array("Syntax error: mismatched parentheses.", '(24 + 3) + 4)'),
         );
     }
 }

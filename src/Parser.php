@@ -2,8 +2,6 @@
 
 namespace oat\beeme;
 
-use oat\beeme\Token;
-
 /**
  * Math Parser.
  * 
@@ -101,8 +99,12 @@ class Parser
     }
     
     /**
-     * Set a global constant for the engine.
+     * Register a global constant for the engine.
      * 
+     * Register a global constant with a given $name and $value to the parser.
+     * 
+     * @param string $name The name of the constant to register.
+     * @param float $value The value of the registered constant.
      */
     public function setConstant($name, $value)
     {
@@ -194,6 +196,8 @@ class Parser
 
     /**
      * Return lexer.
+     * 
+     * Returns the Lexer object used by the parser.
      * 
      * @return Lexer
      */
