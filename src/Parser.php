@@ -127,6 +127,10 @@ class Parser
                     $n = $stack->pop();
                     $stack->push(pow($stack->pop(), $n));
                     break;
+                case '=':
+                    $n = $stack->pop();
+                    $stack->push($stack->pop() == $n);
+                    break;
                 default:
                     throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));
                     break;

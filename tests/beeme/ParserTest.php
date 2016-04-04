@@ -38,7 +38,10 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array('0 + -1', -1.),
             array('+0 + 1', 1.),
             array('9 + +10', 19.),
-            array('+1 - -1', 2.)
+            array('+1 - -1', 2.),
+            
+            array('1 = 1', true),
+            array('0 = 1', false),
         );
     }
     
