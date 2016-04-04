@@ -43,6 +43,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(true, '1 = 1'),
             array(false, '0 = 1'),
             array(true, '1 = 1 = (1 + 1 - 1)'),
+            array(true, 'y + 3*x = 5', array('x' => 5, 'y' => -10)),
             
             array(2., 'a + b', array('a' => 1., 'b' => 1.)),
             array(2., '_A + _B', array('_A' => 1., '_B' => 1.)),
