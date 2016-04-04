@@ -1,12 +1,19 @@
 <?php
 
 namespace oat\beeme;
+
 use oat\beeme\Token;
 
 /**
- * Evaluate mathematical expression.
+ * Math Parser.
+ * 
+ * A Math Parser enabling mathematical expressions to be parsed. It supports
+ * the -, +, *, / (including unary - and +), provides pi and e math constants,
+ * but also a variable substitution mechanism. Finally, it enables comparisons,
+ * using the = operator, returning boolean values for equation solving.
  *
  * @author Adrean Boyadzhiev (netforce) <adrean.boyadzhiev@gmail.com>
+ * @author Jérôme Bogaerts <jerome@taotesting.com>
  */
 class Parser
 {
@@ -18,7 +25,9 @@ class Parser
     protected $lexer;
 
     /**
-     * TranslationStrategy that should translate from infix
+     * TranslationStrategy from infix to postfix (a.k.a. postfix).
+     * 
+     * Translation strategy that should translate from infix
      * mathematical expression notation to reverse-polish 
      * mathematical expression notation.
      *
@@ -33,6 +42,19 @@ class Parser
      */
     private $options = array(
         'translationStrategy' => '\oat\beeme\TranslationStrategy\ShuntingYard',
+    );
+    
+    /**
+     * List of predefined constants.
+     * 
+     * Array of key => value predefined constants. The keys
+     * are the constant names and values are their actual values.
+     * 
+     * @var array
+     */
+    private $predefinedConstants = array(
+        'pi' => M_PI,
+        'e'=> M_E
     );
 
     /**
@@ -64,16 +86,27 @@ class Parser
      * @param string $expression An expression to be evaluated.
      * @param array $variables
      * @return float
-     * @throws \InvalidArgumentException in case of invalid $expression.
+     * @throws \InvalidArgumentException In case of invalid $expression.
+     * @throws \RangeException In case of division by zero.
      */
     public function evaluate($expression, array $variables = array())
     {
+        $variables = array_merge($this->predefinedConstants, $variables);
         $lexer = $this->getLexer();
         $tokens = $lexer->tokenize($expression);
 
         $translationStrategy = new \oat\beeme\TranslationStrategy\ShuntingYard();
 
         return $this->evaluateRPN($translationStrategy->translate($tokens), $variables);
+    }
+    
+    /**
+     * Set a global constant for the engine.
+     * 
+     */
+    public function setConstant($name, $value)
+    {
+        $this->predefinedConstants[$name] = floatval($value);
     }
 
     /**
@@ -83,7 +116,8 @@ class Parser
      * @param array $expressionTokens
      * @param array $variables
      * @return float
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException On syntaxic error.
+     * @throws \RangeException On division by zero.
      */
     private function evaluateRPN(array $expressionTokens, array $variables = array())
     {
@@ -149,7 +183,7 @@ class Parser
                         $stack->push($stack->pop() == $n);
                         break;
                     default:
-                        throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));
+                        throw new \InvalidArgumentException(sprintf('Unexpected character: %s', $tokenValue));
                         break;
                 }
             }

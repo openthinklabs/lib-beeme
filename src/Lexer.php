@@ -10,7 +10,6 @@ namespace oat\beeme;
  */
 class Lexer
 {
-
     /**
      * Collection of Token instances
      * 
@@ -111,7 +110,7 @@ class Lexer
                 $token = new Token($char, Token::T_RIGHT_BRACKET);
                 $this->tokens[] = $token;
             } else {
-                throw new \InvalidArgumentException(sprintf("Syntax error: invalid character '%s'.", $char));
+                throw new \InvalidArgumentException(sprintf("Syntax error: unexpected character '%s'.", $char));
             }
         }
         
