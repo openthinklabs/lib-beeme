@@ -26,6 +26,13 @@ class Lexer
     protected $code;
     
     /**
+     * A buffer containing constant values while parsing.
+     * 
+     * @var string
+     */
+    protected $constantBuffer;
+    
+    /**
      * Mathematical operators map
      *
      * @var array
@@ -42,6 +49,7 @@ class Lexer
     public function __construct()
     {
         $this->tokens = array();
+        $this->constantBuffer = '';
     }
     
     /**
@@ -66,6 +74,7 @@ class Lexer
         
         $this->code = $code;
         $this->tokens = array();
+        $this->constantBuffer = '';
         
         $availableOperators = array_keys(static::$operatorsMap);
         $constantBuffer = '';
@@ -76,11 +85,7 @@ class Lexer
             if (in_array($char, $availableOperators) === true) {
                 
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 // Deal with operator.
                 $token = new Operator(
@@ -91,24 +96,16 @@ class Lexer
                 $this->tokens[] = $token;
             } elseif (is_numeric($char) === true || $char === '.') {
                 // Deal with constant content.
-                $constantBuffer .= $char;
+                $this->constantBuffer .= $char;
             } elseif ($char === '(') {
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 $token = new Token($char, Token::T_LEFT_BRACKET);
                 $this->tokens[] = $token;
             } elseif ($char === ')') {
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 $token = new Token($char, Token::T_RIGHT_BRACKET);
                 $this->tokens[] = $token;
@@ -117,12 +114,25 @@ class Lexer
             }
         }
         
-        if ($constantBuffer !== '') {
-            $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-            $this->tokens[] = $token;
-            $constantBuffer = '';
-        }
+        $this->cleanConstantBuffer();
         
         return $this->tokens;
+    }
+    
+    /**
+     * Clean the constant buffer.
+     * 
+     * Tries to create a constant (e.g. a number) token from the read buffer. An operand 
+     * token will be created only if the current buffer is not empty. The created token
+     * will be placed in the collection of previously created tokens.
+     * 
+     */
+    private function cleanConstantBuffer()
+    {
+        if ($this->constantBuffer !== '') {
+            $token = new Token(floatval($this->constantBuffer), Token::T_OPERAND);
+             $this->tokens[] = $token;
+             $this->constantBuffer = '';
+        }
     }
 }
