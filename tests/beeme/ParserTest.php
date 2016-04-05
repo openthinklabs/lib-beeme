@@ -92,6 +92,14 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array("Syntax error: unexpected character ','.", '24 + 3,4 - 4'),
             array("Syntax error: mismatched parentheses or misplaced number.", '(24 + 3'),
             array("Syntax error: mismatched parentheses.", '(24 + 3) + 4)'),
+            array("Syntax error: operator '*' cannot be used as a unary operator or with an operator as an operand.", '*24 + 3'),
+            array("Syntax error: operator '=' cannot be used as a unary operator or with an operator as an operand.", '=24 + 3'),
+            array("Syntax error: operator '/' cannot be used as a unary operator or with an operator as an operand.", '(/34 + 4'),
+            array("Syntax error: operator '=' cannot be used as a unary operator or with an operator as an operand.", '(=34 + 4'),
+            array("Syntax error: operator '%' cannot be used as a unary operator or with an operator as an operand.", '10 + %4'),
+            array("Syntax error: operator '*' cannot be used as a unary operator or with an operator as an operand.", '10 ** 10'),
+            array("Syntax error: operator '*' cannot be used as a unary operator or with an operator as an operand.", '10 *** 10'),
+            array("Syntax error: operator '=' cannot be used as a unary operator or with an operator as an operand.", '10 == 10'),
         );
     }
 }
