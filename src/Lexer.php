@@ -10,7 +10,6 @@ namespace oat\beeme;
  */
 class Lexer
 {
-
     /**
      * Collection of Token instances
      * 
@@ -26,22 +25,31 @@ class Lexer
     protected $code;
     
     /**
+     * A buffer containing constant values while parsing.
+     * 
+     * @var string
+     */
+    protected $constantBuffer;
+    
+    /**
      * Mathematical operators map
      *
      * @var array
      */
     protected static $operatorsMap = array(
-        '+' => array('priority' => 0, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
-        '-' => array('priority' => 0, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
-        '*' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
-        '/' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
-        '%' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
-        '^' => array('priority' => 2, 'associativity' => Operator::O_RIGHT_ASSOCIATIVE)
+        '=' => array('priority' => 0, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '+' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '-' => array('priority' => 1, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '*' => array('priority' => 2, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '/' => array('priority' => 2, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '%' => array('priority' => 2, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
+        '^' => array('priority' => 3, 'associativity' => Operator::O_RIGHT_ASSOCIATIVE)
     );
 
     public function __construct()
     {
         $this->tokens = array();
+        $this->constantBuffer = '';
     }
     
     /**
@@ -66,6 +74,7 @@ class Lexer
         
         $this->code = $code;
         $this->tokens = array();
+        $this->constantBuffer = '';
         
         $availableOperators = array_keys(static::$operatorsMap);
         $constantBuffer = '';
@@ -76,11 +85,7 @@ class Lexer
             if (in_array($char, $availableOperators) === true) {
                 
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 // Deal with operator.
                 $token = new Operator(
@@ -89,40 +94,47 @@ class Lexer
                     static::$operatorsMap[$char]['associativity']
                 );
                 $this->tokens[] = $token;
-            } elseif (is_numeric($char) === true || $char === '.') {
+            } elseif (LexingUtils::isCharPartOfNumber($char) === true || LexingUtils::isCharPartOfVariable($char)) {
                 // Deal with constant content.
-                $constantBuffer .= $char;
+                $this->constantBuffer .= $char;
             } elseif ($char === '(') {
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 $token = new Token($char, Token::T_LEFT_BRACKET);
                 $this->tokens[] = $token;
             } elseif ($char === ')') {
                 // If the constant buffer is not empty, there is a token to be built.
-                if ($constantBuffer !== '') {
-                    $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-                    $this->tokens[] = $token;
-                    $constantBuffer = '';
-                }
+                $this->cleanConstantBuffer();
                 
                 $token = new Token($char, Token::T_RIGHT_BRACKET);
                 $this->tokens[] = $token;
             } else {
-                throw new \InvalidArgumentException(sprintf("Syntax error: invalid character '%s'.", $char));
+                throw new \InvalidArgumentException(sprintf("Syntax error: unexpected character '%s'.", $char));
             }
         }
         
-        if ($constantBuffer !== '') {
-            $token = new Token(floatval($constantBuffer), Token::T_OPERAND);
-            $this->tokens[] = $token;
-            $constantBuffer = '';
-        }
+        $this->cleanConstantBuffer();
         
         return $this->tokens;
+    }
+    
+    /**
+     * Clean the constant buffer.
+     * 
+     * Tries to create a constant (e.g. a number) token from the read buffer. An operand 
+     * token will be created only if the current buffer is not empty. The created token
+     * will be placed in the collection of previously created tokens.
+     * 
+     */
+    private function cleanConstantBuffer()
+    {
+        if ($this->constantBuffer !== '') {
+            $val = (is_numeric($this->constantBuffer)) ? floatval($this->constantBuffer) : $this->constantBuffer;
+            
+            $token = new Token($val, Token::T_OPERAND);
+            $this->tokens[] = $token;
+            $this->constantBuffer = '';
+        }
     }
 }

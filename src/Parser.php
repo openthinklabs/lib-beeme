@@ -3,9 +3,15 @@
 namespace oat\beeme;
 
 /**
- * Evaluate mathematical expression.
+ * Math Parser.
+ * 
+ * A Math Parser enabling mathematical expressions to be parsed. It supports
+ * the -, +, *, / (including unary - and +), provides pi and e math constants,
+ * but also a variable substitution mechanism. Finally, it enables comparisons,
+ * using the = operator, returning boolean values for equation solving.
  *
  * @author Adrean Boyadzhiev (netforce) <adrean.boyadzhiev@gmail.com>
+ * @author Jérôme Bogaerts <jerome@taotesting.com>
  */
 class Parser
 {
@@ -17,7 +23,9 @@ class Parser
     protected $lexer;
 
     /**
-     * TranslationStrategy that should translate from infix
+     * TranslationStrategy from infix to postfix (a.k.a. postfix).
+     * 
+     * Translation strategy that should translate from infix
      * mathematical expression notation to reverse-polish 
      * mathematical expression notation.
      *
@@ -32,6 +40,19 @@ class Parser
      */
     private $options = array(
         'translationStrategy' => '\oat\beeme\TranslationStrategy\ShuntingYard',
+    );
+    
+    /**
+     * List of predefined constants.
+     * 
+     * Array of key => value predefined constants. The keys
+     * are the constant names and values are their actual values.
+     * 
+     * @var array
+     */
+    private $predefinedConstants = array(
+        'pi' => M_PI,
+        'e'=> M_E
     );
 
     /**
@@ -61,17 +82,33 @@ class Parser
      * Evaluate string representing mathematical expression.
      * 
      * @param string $expression An expression to be evaluated.
+     * @param array $variables
      * @return float
-     * @throws \InvalidArgumentException in case of invalid $expression.
+     * @throws \InvalidArgumentException In case of invalid $expression.
+     * @throws \RangeException In case of division by zero.
      */
-    public function evaluate($expression)
+    public function evaluate($expression, array $variables = array())
     {
+        $variables = array_merge($this->predefinedConstants, $variables);
         $lexer = $this->getLexer();
         $tokens = $lexer->tokenize($expression);
 
         $translationStrategy = new \oat\beeme\TranslationStrategy\ShuntingYard();
 
-        return $this->evaluateRPN($translationStrategy->translate($tokens));
+        return $this->evaluateRPN($translationStrategy->translate($tokens), $variables);
+    }
+    
+    /**
+     * Register a global constant for the engine.
+     * 
+     * Register a global constant with a given $name and $value to the parser.
+     * 
+     * @param string $name The name of the constant to register.
+     * @param float $value The value of the registered constant.
+     */
+    public function setConstant($name, $value)
+    {
+        $this->predefinedConstants[$name] = floatval($value);
     }
 
     /**
@@ -79,57 +116,78 @@ class Parser
      * representing mathematical expression.
      * 
      * @param array $expressionTokens
+     * @param array $variables
      * @return float
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException On syntaxic error.
+     * @throws \RangeException On division by zero.
      */
-    private function evaluateRPN(array $expressionTokens)
+    private function evaluateRPN(array $expressionTokens, array $variables = array())
     {
         $stack = new \SplStack();
 
         foreach ($expressionTokens as $token) {
             $tokenValue = $token->getValue();
-            if (is_numeric($tokenValue)) {
-                $stack->push((float) $tokenValue);
-                continue;
-            }
-
-            switch ($tokenValue) {
-                case '+':
-                    $stack->push($stack->pop() + $stack->pop());
-                    break;
-                case '+u':
-                    $stack->push($stack->pop() * 1.);
-                    break;
-                case '-':
-                    $n = $stack->pop();
-                    $stack->push($stack->pop() - $n);
-                    break;
-                case '-u':
-                    $stack->push($stack->pop() * -1.);
-                    break;
-                case '*':
-                    $stack->push($stack->pop() * $stack->pop());
-                    break;
-                case '/':
-                    $n = $stack->pop();
-                    
-                    if ($n == 0) {
-                        throw new \RangeException('Division by zero.');
+            
+            if ($token->getType() === Token::T_OPERAND) {
+                if (is_numeric($tokenValue) === true) {
+                    // Number.
+                    $stack->push($tokenValue);
+                } else {
+                    // Variable to substitute.
+                    if (isset($variables[$tokenValue]) === true) {
+                        if (is_numeric($variables[$tokenValue]) === true) {
+                            $stack->push(floatval($variables[$tokenValue]));
+                        } else {
+                            $nonNumericValue = $variables[$tokenValue];
+                            throw new \InvalidArgumentException("Cannot substitute variable '${tokenValue}' with non-numeric value '${nonNumericValue}'.");
+                        }
+                    } else {
+                        throw new \InvalidArgumentException("Cannot substitute variable '${tokenValue}'. No value provided.");
                     }
-                    
-                    $stack->push($stack->pop() / $n);
-                    break;
-                case '%':
-                    $n = $stack->pop();
-                    $stack->push($stack->pop() % $n);
-                    break;
-                case '^':
-                    $n = $stack->pop();
-                    $stack->push(pow($stack->pop(), $n));
-                    break;
-                default:
-                    throw new \InvalidArgumentException(sprintf('Invalid operator detected: %s', $tokenValue));
-                    break;
+                }
+            } else {
+                switch ($tokenValue) {
+                    case '+':
+                        $stack->push($stack->pop() + $stack->pop());
+                        break;
+                    case '+u':
+                        $stack->push($stack->pop() * 1.);
+                        break;
+                    case '-':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() - $n);
+                        break;
+                    case '-u':
+                        $stack->push($stack->pop() * -1.);
+                        break;
+                    case '*':
+                        $stack->push($stack->pop() * $stack->pop());
+                        break;
+                    case '/':
+                        $n = $stack->pop();
+                        
+                        if ($n == 0) {
+                            throw new \RangeException('Division by zero.');
+                        }
+                        
+                        $stack->push($stack->pop() / $n);
+                        break;
+                    case '%':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() % $n);
+                        break;
+                    case '^':
+                        $n = $stack->pop();
+                        $stack->push(pow($stack->pop(), $n));
+                        break;
+                    case '=':
+                        $n = $stack->pop();
+                        $stack->push($stack->pop() == $n);
+                        break;
+                    default:
+                        throw new \InvalidArgumentException(sprintf('Unexpected character: %s', $tokenValue));
+                        break;
+                }
             }
         }
 
@@ -138,6 +196,8 @@ class Parser
 
     /**
      * Return lexer.
+     * 
+     * Returns the Lexer object used by the parser.
      * 
      * @return Lexer
      */
