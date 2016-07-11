@@ -52,6 +52,9 @@ class ParserTest extends PHPUnit_Framework_TestCase
             
             array(2., 'a + b', array('a' => 1., 'b' => 1.)),
             array(2., '_A + _B', array('_A' => 1., '_B' => 1.)),
+            
+            array(1., 'abs(-1)'),
+            array(79., '4 + 3 * abs(-29 + 4)')
         );
     }
     
@@ -100,6 +103,12 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array("Syntax error: operator '*' cannot be used as a unary operator or with an operator as an operand.", '10 ** 10'),
             array("Syntax error: operator '*' cannot be used as a unary operator or with an operator as an operand.", '10 *** 10'),
             array("Syntax error: operator '=' cannot be used as a unary operator or with an operator as an operand.", '10 == 10'),
+            array("Syntax error: mismatched parentheses or misplaced number.", 'abs('),
+            array("Syntax error: mismatched parentheses or misplaced number.", 'abs(-'),
+            array("Syntax error: mismatched parentheses or misplaced number.", 'abs(-1'),
+            array("Syntax error: mismatched parentheses or misplaced number.", 'abs(-1('),
+            array("Syntax error: empty parenthesis.", 'abs()'),
+            array("Syntax error: empty parenthesis.", '1 + ()'),
         );
     }
     

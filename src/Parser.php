@@ -176,6 +176,9 @@ class Parser
                         $n = $stack->pop();
                         $stack->push($stack->pop() % $n);
                         break;
+                    case 'abs':
+                        $stack->push(abs($stack->pop()));
+                        break;
                     case '^':
                         $n = $stack->pop();
                         $stack->push(pow($stack->pop(), $n));

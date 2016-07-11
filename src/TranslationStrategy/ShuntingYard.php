@@ -58,7 +58,7 @@ class ShuntingYard implements TranslationStrategyInterface
                     if ($isUnary) {
                         if ($o1->getValue() === '-' || $o1->getValue() === '+') {
                             $o1 = new Operator($o1->getValue() . 'u', 3, Operator::O_NONE_ASSOCIATIVE);
-                        } else {
+                        } else if ($o1->getValue() !== 'abs') {
                             throw new \InvalidArgumentException("Syntax error: operator '" . $o1->getValue() . "' cannot be used as a unary operator or with an operator as an operand.");
                         }
                     } else {
@@ -73,16 +73,21 @@ class ShuntingYard implements TranslationStrategyInterface
                     $this->operatorStack->push($token);
                     break;
                 case Token::T_RIGHT_BRACKET:
+                    if ($this->isPreviousTokenOperator($tokens, $i)) {
+                        throw new \InvalidArgumentException('Syntax error: an operator cannot be followed by a right parenthesis.');
+                    } elseif ($this->isPreviousTokenLeftParenthesis($tokens, $i)) {
+                        throw new \InvalidArgumentException('Syntax error: empty parenthesis.');
+                    }
                     while((!$this->operatorStack->isEmpty()) && (Token::T_LEFT_BRACKET != $this->operatorStack->top()->getType())) {
                         $this->outputQueue->enqueue($this->operatorStack->pop());
                     }
                     if($this->operatorStack->isEmpty()) {
-                        throw new InvalidArgumentException(sprintf('Syntax error: mismatched parentheses.'));
+                        throw new \InvalidArgumentException('Syntax error: mismatched parentheses.');
                     }
                     $this->operatorStack->pop();
                     break;
                 default:
-                    throw new InvalidArgumentException(sprintf('Invalid token detected: %s.', $token));
+                    throw new \InvalidArgumentException('Invalid token detected: %s.', $token);
                     break;
             }
         }
@@ -91,7 +96,7 @@ class ShuntingYard implements TranslationStrategyInterface
         }
 
         if(!$this->operatorStack->isEmpty()) {
-            throw new InvalidArgumentException(sprintf('Syntax error: mismatched parentheses or misplaced number.'));
+            throw new InvalidArgumentException('Syntax error: mismatched parentheses or misplaced number.');
         }
 
         return iterator_to_array($this->outputQueue);
