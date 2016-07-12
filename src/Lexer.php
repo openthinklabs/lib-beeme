@@ -143,7 +143,7 @@ class Lexer
             $val = (is_numeric($this->constantBuffer)) ? floatval($this->constantBuffer) : $this->constantBuffer;
             
             if (in_array($val, self::$functionsMap, true)) {
-                $token = new Operator($val, 3, Operator::O_LEFT_ASSOCIATIVE);
+                $token = new FunctionToken($val);
             } else {
                 $token = new Token($val, Token::T_OPERAND);
             }

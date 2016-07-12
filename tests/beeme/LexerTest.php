@@ -5,6 +5,7 @@ namespace oat\beeme\tests;
 use PHPUnit_Framework_TestCase;
 use oat\beeme\Lexer;
 use oat\beeme\Token;
+use oat\beeme\FunctionToken;
 use oat\beeme\Operator;
 
 class LexerTest extends PHPUnit_Framework_TestCase
@@ -71,7 +72,7 @@ class LexerTest extends PHPUnit_Framework_TestCase
             ),
             array(
                 array(
-                    new Operator('abs', 2, Operator::O_LEFT_ASSOCIATIVE),
+                    new FunctionToken('abs'),
                     new Token('(', Token::T_LEFT_BRACKET),
                     new Token(1., Token::T_OPERAND),
                     new Token(')', Token::T_RIGHT_BRACKET)
@@ -80,7 +81,7 @@ class LexerTest extends PHPUnit_Framework_TestCase
             ),
             array(
                 array(
-                    new Operator('abs', 2, Operator::O_LEFT_ASSOCIATIVE),
+                    new FunctionToken('abs'),
                     new Token('(', Token::T_LEFT_BRACKET),
                     new Token(')', Token::T_RIGHT_BRACKET)
                 ),
@@ -91,7 +92,7 @@ class LexerTest extends PHPUnit_Framework_TestCase
                     new Token(1., Token::T_OPERAND),
                     new Operator('+', 0, Operator::O_LEFT_ASSOCIATIVE),
                     new Token('(', Token::T_LEFT_BRACKET),
-                    new Operator('abs', 2, Operator::O_LEFT_ASSOCIATIVE),
+                    new FunctionToken('abs'),
                     new Token('(', Token::T_LEFT_BRACKET),
                     new Token(1., Token::T_OPERAND),
                     new Token(')', Token::T_RIGHT_BRACKET),

@@ -39,6 +39,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(1., '+0 + 1'),
             array(19., '9 + +10'),
             array(2., '+1 - -1'),
+            array(4.4, '2.2 + 2.2'),
             array(M_PI, 'pi'),
             array(M_PI * 2, 'pi * 2'),
             array(M_E, 'e'),
@@ -54,7 +55,9 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(2., '_A + _B', array('_A' => 1., '_B' => 1.)),
             
             array(1., 'abs(-1)'),
-            array(79., '4 + 3 * abs(-29 + 4)')
+            array(79., '4 + 3 * abs(-29 + 4)'),
+            array(1., 'abs(abs(-1))'),
+            array(4., 'abs(abs(-1 - 3))'),
         );
     }
     

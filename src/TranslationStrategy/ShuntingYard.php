@@ -5,6 +5,7 @@ namespace oat\beeme\TranslationStrategy;
 use InvalidArgumentException;
 use oat\beeme\Token;
 use oat\beeme\Operator;
+use oat\beeme\FunctionToken;
 use SplQueue;
 use SplStack;
 
@@ -52,13 +53,14 @@ class ShuntingYard implements TranslationStrategyInterface
                     $this->outputQueue->enqueue($token);
                     break;
                 case Token::T_OPERATOR:
+                case Token::T_FUNCTION:
                     $o1 = $token;
                     $isUnary = $this->isPreviousTokenOperator($tokens, $i) || $this->isPreviousTokenLeftParenthesis($tokens, $i) || $this->hasPreviousToken($i) === false;
                     
                     if ($isUnary) {
                         if ($o1->getValue() === '-' || $o1->getValue() === '+') {
                             $o1 = new Operator($o1->getValue() . 'u', 3, Operator::O_NONE_ASSOCIATIVE);
-                        } else if ($o1->getValue() !== 'abs') {
+                        } else if (!$o1 instanceof FunctionToken) {
                             throw new \InvalidArgumentException("Syntax error: operator '" . $o1->getValue() . "' cannot be used as a unary operator or with an operator as an operand.");
                         }
                     } else {
@@ -87,7 +89,7 @@ class ShuntingYard implements TranslationStrategyInterface
                     $this->operatorStack->pop();
                     break;
                 default:
-                    throw new \InvalidArgumentException('Invalid token detected: %s.', $token);
+                    throw new \InvalidArgumentException(sprintf('Invalid token detected: %s.', $token));
                     break;
             }
         }
@@ -112,7 +114,7 @@ class ShuntingYard implements TranslationStrategyInterface
         $hasOperatorInStack = false;
         if(!$this->operatorStack->isEmpty()) {
             $top = $this->operatorStack->top();
-            if(Token::T_OPERATOR == $top->getType()) {
+            if($top instanceof Operator) {
                 $hasOperatorInStack = true;
             }
         }
