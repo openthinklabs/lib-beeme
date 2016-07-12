@@ -14,6 +14,7 @@ class Token
     const T_OPERAND = 2;
     const T_LEFT_BRACKET = 3;
     const T_RIGHT_BRACKET = 4;
+    const T_FUNCTION = 5;
 
     /**
      * String representation of this token

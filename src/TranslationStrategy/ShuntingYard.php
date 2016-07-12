@@ -5,6 +5,7 @@ namespace oat\beeme\TranslationStrategy;
 use InvalidArgumentException;
 use oat\beeme\Token;
 use oat\beeme\Operator;
+use oat\beeme\FunctionToken;
 use SplQueue;
 use SplStack;
 
@@ -52,13 +53,14 @@ class ShuntingYard implements TranslationStrategyInterface
                     $this->outputQueue->enqueue($token);
                     break;
                 case Token::T_OPERATOR:
+                case Token::T_FUNCTION:
                     $o1 = $token;
                     $isUnary = $this->isPreviousTokenOperator($tokens, $i) || $this->isPreviousTokenLeftParenthesis($tokens, $i) || $this->hasPreviousToken($i) === false;
                     
                     if ($isUnary) {
                         if ($o1->getValue() === '-' || $o1->getValue() === '+') {
                             $o1 = new Operator($o1->getValue() . 'u', 3, Operator::O_NONE_ASSOCIATIVE);
-                        } else {
+                        } else if (!$o1 instanceof FunctionToken) {
                             throw new \InvalidArgumentException("Syntax error: operator '" . $o1->getValue() . "' cannot be used as a unary operator or with an operator as an operand.");
                         }
                     } else {
@@ -73,16 +75,21 @@ class ShuntingYard implements TranslationStrategyInterface
                     $this->operatorStack->push($token);
                     break;
                 case Token::T_RIGHT_BRACKET:
+                    if ($this->isPreviousTokenOperator($tokens, $i)) {
+                        throw new \InvalidArgumentException('Syntax error: an operator cannot be followed by a right parenthesis.');
+                    } elseif ($this->isPreviousTokenLeftParenthesis($tokens, $i)) {
+                        throw new \InvalidArgumentException('Syntax error: empty parenthesis.');
+                    }
                     while((!$this->operatorStack->isEmpty()) && (Token::T_LEFT_BRACKET != $this->operatorStack->top()->getType())) {
                         $this->outputQueue->enqueue($this->operatorStack->pop());
                     }
                     if($this->operatorStack->isEmpty()) {
-                        throw new InvalidArgumentException(sprintf('Syntax error: mismatched parentheses.'));
+                        throw new \InvalidArgumentException('Syntax error: mismatched parentheses.');
                     }
                     $this->operatorStack->pop();
                     break;
                 default:
-                    throw new InvalidArgumentException(sprintf('Invalid token detected: %s.', $token));
+                    throw new \InvalidArgumentException(sprintf('Invalid token detected: %s.', $token));
                     break;
             }
         }
@@ -91,7 +98,7 @@ class ShuntingYard implements TranslationStrategyInterface
         }
 
         if(!$this->operatorStack->isEmpty()) {
-            throw new InvalidArgumentException(sprintf('Syntax error: mismatched parentheses or misplaced number.'));
+            throw new InvalidArgumentException('Syntax error: mismatched parentheses or misplaced number.');
         }
 
         return iterator_to_array($this->outputQueue);
@@ -107,7 +114,7 @@ class ShuntingYard implements TranslationStrategyInterface
         $hasOperatorInStack = false;
         if(!$this->operatorStack->isEmpty()) {
             $top = $this->operatorStack->top();
-            if(Token::T_OPERATOR == $top->getType()) {
+            if($top instanceof Operator) {
                 $hasOperatorInStack = true;
             }
         }

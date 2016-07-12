@@ -45,6 +45,30 @@ class Lexer
         '%' => array('priority' => 2, 'associativity' => Operator::O_LEFT_ASSOCIATIVE),
         '^' => array('priority' => 3, 'associativity' => Operator::O_RIGHT_ASSOCIATIVE)
     );
+    
+    /**
+     * Available functions map
+     * 
+     * @var array
+     */
+    protected static $functionsMap = array(
+        'abs',
+        'sin',
+        'sinh',
+        'asin',
+        'asinh',
+        'cos',
+        'cosh',
+        'acos',
+        'acosh',
+        'tan',
+        'tanh',
+        'atan',
+        'exp',
+        'ceil',
+        'floor',
+        'sqrt',
+    );
 
     public function __construct()
     {
@@ -103,6 +127,7 @@ class Lexer
                 
                 $token = new Token($char, Token::T_LEFT_BRACKET);
                 $this->tokens[] = $token;
+                
             } elseif ($char === ')') {
                 // If the constant buffer is not empty, there is a token to be built.
                 $this->cleanConstantBuffer();
@@ -132,7 +157,12 @@ class Lexer
         if ($this->constantBuffer !== '') {
             $val = (is_numeric($this->constantBuffer)) ? floatval($this->constantBuffer) : $this->constantBuffer;
             
-            $token = new Token($val, Token::T_OPERAND);
+            if (in_array($val, self::$functionsMap, true)) {
+                $token = new FunctionToken($val);
+            } else {
+                $token = new Token($val, Token::T_OPERAND);
+            }
+             
             $this->tokens[] = $token;
             $this->constantBuffer = '';
         }

@@ -9,11 +9,11 @@ The recommended way to install Beeme is [through composer](http://getcomposer.or
 ```JSON
 {
     "require": {
-        "oat-sa/lib-beeme": "dev-develop"
+        "oat-sa/lib-beeme": "dev-master"
     }
 }
 ```
-## Usage
+## Basic Usage
 
 Here is an simple example of evaluation of mathematical expression
 ```php
@@ -23,11 +23,63 @@ $parser = new \oat\beeme\Parser();
 $expression = '1 + 2 * 3 * ( 7 * 8 ) - ( 45 - 10 )';
 $result = $parser->evaluate($expression);
 
-echo $result; //302
-
+echo $result; // 302.000000
 ```
+
+## Constants
+
+Beeme comes with two built-in constants that are "_pi_" and "_e_". You can also use custom constans in your expressions,
+and give them actual values at runtime. Below, an example with the constant "_x_" replaced by the integer value 3.
+
+```php
+<?php
+
+$parser = new \oat\beeme\Parser();
+$expression = '3 + x';
+$result = $parser->evaluate(
+    $expression,
+    ['x' => 3]
+);
+
+echo $result; // 6.000000
+```
+
+## Functions
+
+Beeme provides a set of unary functions to be used in your expressions. Below is an example of using the "_abs_" function
+in an expression.
+
+```php
+<?php
+
+$expression = '1 + abs(x)';
+$result = $parser->evaluate(
+    $expression,
+    ['x' => -10]
+);
+
+echo $result; // 11.000000
+```
+
+Please see the list of available unary functions available in Beeme. They all map to their PHP built-in equivalent:
+
+* [abs](http://php.net/manual/en/function.abs.php)
+* [sin](http://php.net/manual/en/function.sin.php)
+* [sinh](http://php.net/manual/en/function.sinh.php)
+* [asin](http://php.net/manual/en/function.asin.php)
+* [asinh](http://php.net/manual/en/function.asinh.php)
+* [cos](http://php.net/manual/en/function.cosh.php)
+* [acos](http://php.net/manual/en/function.acos.php)
+* [tan](http://php.net/manual/en/function.tan.php)
+* [tanh](http://php.net/manual/en/function.tanh.php)
+* [atan](http://php.net/manual/en/function.atan.php)
+* [exp](http://php.net/manual/en/function.exp.php)
+* [ceil](http://php.net/manual/en/function.ceil.php)
+* [floor](http://php.net/manual/en/function.floor.php)
+
 ## TODO
-  - Add unit tests.
+  - Always more unit tests
+  - N-ary functions
 
 ## License
 

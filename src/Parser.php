@@ -176,6 +176,23 @@ class Parser
                         $n = $stack->pop();
                         $stack->push($stack->pop() % $n);
                         break;
+                    case 'abs':
+                    case 'sin':
+                    case 'sinh':
+                    case 'asin':
+                    case 'asinh':
+                    case 'cos':
+                    case 'cosh':
+                    case 'acos':
+                    case 'tan':
+                    case 'tanh':
+                    case 'atan':
+                    case 'exp':
+                    case 'ceil':
+                    case 'floor':
+                    case 'sqrt':
+                        $stack->push(call_user_func($tokenValue, $stack->pop()));
+                        break;
                     case '^':
                         $n = $stack->pop();
                         $stack->push(pow($stack->pop(), $n));
