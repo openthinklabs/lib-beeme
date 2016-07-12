@@ -52,7 +52,22 @@ class Lexer
      * @var array
      */
     protected static $functionsMap = array(
-        'abs'
+        'abs',
+        'sin',
+        'sinh',
+        'asin',
+        'asinh',
+        'cos',
+        'cosh',
+        'acos',
+        'acosh',
+        'tan',
+        'tanh',
+        'atan',
+        'exp',
+        'ceil',
+        'floor',
+        'sqrt',
     );
 
     public function __construct()
