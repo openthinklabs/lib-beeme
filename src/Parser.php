@@ -191,7 +191,7 @@ class Parser
                     case 'ceil':
                     case 'floor':
                     case 'sqrt':
-                        $stack->push(call_user_func($tokenValue, $stack->pop()));
+                        $stack->push(round(call_user_func($tokenValue, $stack->pop()), 8));
                         break;
                     case '^':
                         $n = $stack->pop();

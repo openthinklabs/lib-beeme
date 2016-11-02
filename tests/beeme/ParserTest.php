@@ -58,6 +58,16 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(79., '4 + 3 * abs(-29 + 4)'),
             array(1., 'abs(abs(-1))'),
             array(4., 'abs(abs(-1 - 3))'),
+
+            array(-1., 'cos(pi)'),
+            array(0., 'cos(pi/2)'),
+
+            array(0., 'sin(pi)'),
+            array(1., 'sin(pi/2)'),
+            array(0., '1-sin((1+x)*pi/2)', array('x' => 0)),
+            array(1., '1-sin((1+x)*pi/2)', array('x' => 1)),
+            array(true, 'y=1-sin((1+x)*pi/2)', array('x' => 0, 'y' => 0)),
+            array(true, 'y=1-sin((1+x)*pi/2)', array('x' => 1, 'y' => 1)),
         );
     }
     
