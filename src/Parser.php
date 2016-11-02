@@ -193,6 +193,9 @@ class Parser
                     case 'sqrt':
                         $stack->push(round(call_user_func($tokenValue, $stack->pop()), 8));
                         break;
+                    case 'cotan':
+                        $stack->push(round(tan(M_PI/2 - $stack->pop()), 8));
+                        break;
                     case '^':
                         $n = $stack->pop();
                         $stack->push(pow($stack->pop(), $n));

@@ -62,6 +62,11 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(-1., 'cos(pi)'),
             array(0., 'cos(pi/2)'),
 
+            array(0., 'tan(0)'),
+            array(1., 'tan(pi/4)'),
+            array(1., 'cotan(pi/4)'),
+            array(0., 'cotan(pi/2)'),
+
             array(0., 'sin(pi)'),
             array(1., 'sin(pi/2)'),
             array(0., '1-sin((1+x)*pi/2)', array('x' => 0)),
