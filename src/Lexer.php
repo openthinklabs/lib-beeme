@@ -68,7 +68,8 @@ class Lexer
         'ceil',
         'floor',
         'sqrt',
-        'cotan'
+        'cotan',
+        'log'
     );
 
     public function __construct()

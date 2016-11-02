@@ -59,6 +59,10 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(1., 'abs(abs(-1))'),
             array(4., 'abs(abs(-1 - 3))'),
 
+            array(1., 'log(e)'),
+            array(0., 'log(1)'),
+            array(2., 'log(e^(2*x))', array('x' => 1)),
+
             array(-1., 'cos(pi)'),
             array(0., 'cos(pi/2)'),
 
