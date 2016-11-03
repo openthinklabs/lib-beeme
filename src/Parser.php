@@ -40,6 +40,7 @@ class Parser
      */
     private $options = array(
         'translationStrategy' => '\oat\beeme\TranslationStrategy\ShuntingYard',
+        'comparisonPrecision' => -1
     );
     
     /**
@@ -192,18 +193,17 @@ class Parser
                     case 'floor':
                     case 'sqrt':
                     case 'log':
-                        $stack->push(round(call_user_func($tokenValue, $stack->pop()), 8));
+                        $stack->push(call_user_func($tokenValue, $stack->pop()));
                         break;
                     case 'cotan':
-                        $stack->push(round(tan(M_PI/2 - $stack->pop()), 8));
+                        $stack->push(tan(M_PI/2 - $stack->pop()));
                         break;
                     case '^':
                         $n = $stack->pop();
                         $stack->push(pow($stack->pop(), $n));
                         break;
                     case '=':
-                        $n = $stack->pop();
-                        $stack->push($stack->pop() == $n);
+                        $stack->push($this->compareFloat($stack->pop(), $stack->pop()));
                         break;
                     default:
                         throw new \InvalidArgumentException(sprintf('Unexpected character: %s', $tokenValue));
@@ -213,6 +213,21 @@ class Parser
         }
 
         return $stack->top();
+    }
+
+    /**
+     * Properly compare two float values according to configuration options
+     *
+     * @see http://php.net/manual/en/language.types.float.php
+     * @param float $value1
+     * @param float $value2
+     * @return bool
+     */
+    private function compareFloat($value1, $value2){
+        if(is_numeric($this->options['comparisonPrecision']) && $this->options['comparisonPrecision'] > 0){
+            return (abs($value1 - $value2) < pow(10, -$this->options['comparisonPrecision']));
+        }
+        return ($value1 == $value2);
     }
 
     /**

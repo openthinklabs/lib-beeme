@@ -17,7 +17,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
      */
     public function testEvaluate($expected, $input, array $variables = array())
     {
-        $parser = new Parser();
+        $parser = new Parser(['comparisonPrecision' => 9]);
         $result = $parser->evaluate($input, $variables);
         $this->assertSame($expected, $result, "Expression Evaluation: 'result of expression = '${input}' must be equal to '${expected}' but is '${result}'.");
     }
@@ -44,16 +44,16 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(M_PI * 2, 'pi * 2'),
             array(M_E, 'e'),
             array(M_E * 2, 'e * 2'),
-            
+
             array(true, '1 = 1'),
             array(false, '0 = 1'),
             array(true, '1 = 1 = (1 + 1 - 1)'),
             array(true, 'y + 3*x = 5', array('x' => 5, 'y' => -10.)),
             array(false, 'y + 3*x = 5', array('x' => 4., 'y' => -10.)),
-            
+
             array(2., 'a + b', array('a' => 1., 'b' => 1.)),
             array(2., '_A + _B', array('_A' => 1., '_B' => 1.)),
-            
+
             array(1., 'abs(-1)'),
             array(79., '4 + 3 * abs(-29 + 4)'),
             array(1., 'abs(abs(-1))'),
@@ -65,6 +65,10 @@ class ParserTest extends PHPUnit_Framework_TestCase
 
             array(-1., 'cos(pi)'),
             array(0., 'cos(pi/2)'),
+            array(0., 'cos(-pi/2)'),
+            array(1., 'cos(0)'),
+            array(true, 'y = cos(pi/2*x)', array('x' => -1, 'y' => 0)),
+            array(true, 'y = cos(pi/2*x)', array('x' => 0, 'y' => 1)),
 
             array(0., 'tan(0)'),
             array(1., 'tan(pi/4)'),
@@ -75,8 +79,8 @@ class ParserTest extends PHPUnit_Framework_TestCase
             array(1., 'sin(pi/2)'),
             array(0., '1-sin((1+x)*pi/2)', array('x' => 0)),
             array(1., '1-sin((1+x)*pi/2)', array('x' => 1)),
-            array(true, 'y=1-sin((1+x)*pi/2)', array('x' => 0, 'y' => 0)),
-            array(true, 'y=1-sin((1+x)*pi/2)', array('x' => 1, 'y' => 1)),
+            array(true, 'y = 1-sin((1+x)*pi/2)', array('x' => 0, 'y' => 0)),
+            array(true, 'y = 1-sin((1+x)*pi/2)', array('x' => 1, 'y' => 1)),
         );
     }
     
