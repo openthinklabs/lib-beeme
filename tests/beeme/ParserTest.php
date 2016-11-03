@@ -17,7 +17,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
      */
     public function testEvaluate($expected, $input, array $variables = array())
     {
-        $parser = new Parser(['comparisonPrecision' => 9]);
+        $parser = new Parser(array('comparisonPrecision' => 9));
         $result = $parser->evaluate($input, $variables);
         $this->assertSame($expected, $result, "Expression Evaluation: 'result of expression = '${input}' must be equal to '${expected}' but is '${result}'.");
     }
